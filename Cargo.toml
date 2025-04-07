@@ -1,0 +1,23 @@
+[package]
+authors = ["Jonathan Pallant <jonathan.pallant@ferrous-systems.com>", "The Cortex-R Team <cortex-r@teams.rust-embedded.org>"]
+default-run = "hello"
+edition = "2021"
+name = "am243x-launchpad"
+description = "Examples for the Texas Instruments AM243x-Launchpad (Cortex-R5F)"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/rust-embedded/cortex-ar.git"
+homepage = "https://github.com/rust-embedded/cortex-ar.git"
+rust-version = "1.82"
+version = "0.1.0"
+
+[dependencies]
+cortex-ar = { path = "/Users/jonathan/Documents/open-source/rust-embedded/cortex-ar/cortex-ar", features = ["critical-section-single-core"] }
+cortex-r-rt = { path = "/Users/jonathan/Documents/open-source/rust-embedded/cortex-ar/cortex-r-rt" }
+semihosting = { version = "0.1.18", features = ["stdio"] }
+
+[build-dependencies]
+arm-targets = { version = "0.1.0", path = "/Users/jonathan/Documents/open-source/rust-embedded/cortex-ar/arm-targets" }
+
+[features]
+eabi-fpu = ["cortex-r-rt/eabi-fpu"]

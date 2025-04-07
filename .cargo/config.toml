@@ -1,0 +1,5 @@
+[build]
+target = "armv7r-none-eabihf"
+
+[target.armv7r-none-eabihf]
+runner = "arm-none-eabi-gdb -x gdb-commands.txt"

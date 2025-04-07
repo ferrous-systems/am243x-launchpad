@@ -1,0 +1,6 @@
+# Connect to the first Cortex-R5F
+target extended-remote :3334
+load
+break kmain
+break _el1_start
+continue
