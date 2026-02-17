@@ -3,45 +3,59 @@
 #![no_std]
 #![no_main]
 
-use core::sync::atomic::AtomicU32;
+use core::sync::atomic::{AtomicU32, Ordering};
 
-use cortex_ar::register::{Dfar, Dfsr, Sctlr};
-// pull in our start-up code
+use aarch32_cpu::register::{Dfar, Dfsr, Sctlr};
+use aarch32_rt::{entry, exception};
 use am243x_launchpad as _;
+use defmt::println;
 
-use semihosting::println;
-
+#[unsafe(no_mangle)]
 static COUNTER: AtomicU32 = AtomicU32::new(0);
 
 /// The entry-point to the Rust application.
 ///
 /// It is called by the start-up.
-#[no_mangle]
-pub extern "C" fn kmain() -> ! {
-    main();
-}
-
-/// The main function of our Rust application.
-#[export_name = "main"]
-#[allow(unreachable_code)]
+#[entry]
 fn main() -> ! {
     // Enable alignment check for Armv7-R. Was not required
     // on Cortex-A for some reason, even though the bit was not set.
     enable_alignment_check();
 
     println!("Hello, this is an data abort exception example");
-    // Unaligned read
     unsafe {
-        let addr: *const u32 = 0x1001 as *const u32; // Unaligned address (not 4-byte aligned)
-        core::arch::asm!(
-            "ldr r0, [{addr}]",  // Attempt unaligned load (should trigger Data Abort)
-            addr = in(reg) addr, // Pass unaligned pointer
-            options(nostack, preserves_flags) // No stack usage, preserves flags
-        );
+        // Unaligned read
+        unaligned_from_a32();
     }
 
-    unreachable!("should never be here!");
+    // turn it off before we do the stack dump on exit, because println! has been
+    // observed to do unaligned reads.
+    disable_alignment_check();
+
+    println!("Recovered from fault OK!");
+
+    semihosting::process::exit(0);
 }
+
+// These functions are written in assembly
+unsafe extern "C" {
+    fn unaligned_from_a32();
+}
+
+core::arch::global_asm!(
+    r#"
+    // fn unaligned_from_a32();
+    .arm
+    .global unaligned_from_a32
+    .type unaligned_from_a32, %function
+    unaligned_from_a32:
+        ldr     r0, =COUNTER
+        adds    r0, r0, 1
+        ldr     r0, [r0]
+        bx      lr
+    .size unaligned_from_a32, . - unaligned_from_a32
+"#
+);
 
 fn enable_alignment_check() {
     let mut sctrl = Sctlr::read();
@@ -55,32 +69,70 @@ fn disable_alignment_check() {
     Sctlr::write(sctrl);
 }
 
-#[unsafe(no_mangle)]
-unsafe extern "C" fn _undefined_handler(_faulting_instruction: u32) {
+#[exception(Undefined)]
+fn undefined_handler(_addr: usize) -> ! {
     panic!("unexpected undefined exception");
 }
 
-#[unsafe(no_mangle)]
-unsafe extern "C" fn _prefetch_handler(_faulting_instruction: u32) {
-    panic!("unexpected prefetch exception");
+#[exception(PrefetchAbort)]
+fn prefetch_abort_handler(_addr: usize) -> ! {
+    panic!("unexpected prefetch abort");
 }
 
-#[unsafe(no_mangle)]
-unsafe extern "C" fn _abort_handler(_faulting_instruction: u32) {
+#[exception(DataAbort)]
+unsafe fn data_abort_handler(addr: usize) -> usize {
     println!("data abort occurred");
-    let dfsr = Dfsr::read();
-    println!("DFSR (Fault Status Register): {:?}", dfsr);
-    println!("DFSR Status: {:?}", dfsr.status());
     // If this is not disabled, reading DFAR will trigger an alignment fault on Armv8-R, leading
     // to a loop.
     disable_alignment_check();
+    let dfsr = Dfsr::read();
+    println!("DFSR (Fault Status Register): {:?}", dfsr);
+    println!("DFSR Status: {:?}", dfsr.status());
     let dfar = Dfar::read();
-    println!("DFAR (Faulting Address Register): {:?}", dfar);
     enable_alignment_check();
-    // For the first iteration, we do a regular exception return, which should
-    // trigger the exception again.
-    let counter_val = COUNTER.fetch_add(1, core::sync::atomic::Ordering::Relaxed) + 1;
-    if counter_val == 2 {
-        semihosting::process::exit(0);
+
+    // note the fault isn't at the start of the function
+    let expect_fault_at = unaligned_from_a32 as unsafe extern "C" fn() as usize + 8;
+
+    if addr == expect_fault_at {
+        println!("caught unaligned_from_a32");
+    } else {
+        println!(
+            "Bad fault address {:08x} is not {:08x}",
+            addr, expect_fault_at
+        );
+    }
+
+    let expect_fault_from = core::ptr::addr_of!(COUNTER) as usize + 1;
+
+    if dfar.0 as usize == expect_fault_from {
+        println!("caught fault on COUNTER");
+    } else {
+        println!(
+            "Bad DFAR address {:08x} is not {:08x}",
+            dfar.0, expect_fault_from
+        );
+    }
+
+    let counter = COUNTER.load(Ordering::Relaxed);
+    COUNTER.store(counter + 1, Ordering::Relaxed);
+    match counter {
+        0 => {
+            // first time, huh?
+            // go back and do it again
+            println!("Doing it again");
+            addr
+        }
+        1 => {
+            // second time, huh?
+            // go back but skip the instruction
+            println!("Skipping instruction");
+            addr + 4
+        }
+        _ => {
+            // we've faulted thrice - time to quit
+            println!("We triple faulted");
+            semihosting::process::abort();
+        }
     }
 }

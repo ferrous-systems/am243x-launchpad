@@ -1,23 +1,25 @@
 [package]
-authors = ["Jonathan Pallant <jonathan.pallant@ferrous-systems.com>", "The Cortex-R Team <cortex-r@teams.rust-embedded.org>"]
+authors = ["Jonathan Pallant <jonathan.pallant@ferrous-systems.com>"]
 default-run = "hello"
-edition = "2021"
+edition = "2024"
 name = "am243x-launchpad"
 description = "Examples for the Texas Instruments AM243x-Launchpad (Cortex-R5F)"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/rust-embedded/cortex-ar.git"
-homepage = "https://github.com/rust-embedded/cortex-ar.git"
-rust-version = "1.82"
+repository = "https://github.com/ferrous-systems/am243x-launchpad"
+homepage = "https://github.com/ferrous-systems/am243x-launchpad"
+rust-version = "1.93"
 version = "0.1.0"
 
 [dependencies]
-cortex-ar = { path = "/Users/jonathan/Documents/open-source/rust-embedded/cortex-ar/cortex-ar", features = ["critical-section-single-core"] }
-cortex-r-rt = { path = "/Users/jonathan/Documents/open-source/rust-embedded/cortex-ar/cortex-r-rt" }
+aarch32-cpu = { version = "0.2", features = ["critical-section-single-core", "defmt"] }
+aarch32-rt = "0.2"
+defmt = "1.0.1"
+defmt-rtt = "1.0.0"
 semihosting = { version = "0.1.18", features = ["stdio"] }
 
 [build-dependencies]
-arm-targets = { version = "0.1.0", path = "/Users/jonathan/Documents/open-source/rust-embedded/cortex-ar/arm-targets" }
+arm-targets = "0.4.0"
 
 [features]
-eabi-fpu = ["cortex-r-rt/eabi-fpu"]
+eabi-fpu = ["aarch32-rt/eabi-fpu"]

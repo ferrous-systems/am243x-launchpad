@@ -2,4 +2,9 @@
 target = "armv7r-none-eabihf"
 
 [target.armv7r-none-eabihf]
-runner = "arm-none-eabi-gdb -x gdb-commands.txt"
+# You must set the environment variable RUST_GDB=arm-none-eabi-gdb or
+# RUST_GDB=gdb-multiarch, depending on your host platform.
+runner = "probe-rs run --chip AM2434 --chip-description-path ./AM243.yaml"
+
+[env]
+DEFMT_LOG="debug"
