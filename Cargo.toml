@@ -12,14 +12,14 @@ rust-version = "1.93"
 version = "0.1.0"
 
 [dependencies]
-aarch32-cpu = { version = "0.2", features = ["critical-section-single-core", "defmt"] }
-aarch32-rt = "0.2"
-defmt = "1.0.1"
-defmt-rtt = "1.0.0"
-semihosting = { version = "0.1.18", features = ["stdio"] }
+aarch32-cpu = { version = "0.4", features = ["critical-section-single-core", "defmt"] }
+aarch32-rt = "0.5"
+defmt = "1"
+defmt-rtt = "1"
+semihosting = { version = "0.1", features = ["stdio"] }
 
 [build-dependencies]
-arm-targets = "0.4.0"
+arm-targets = "0.4"
 
 [features]
 eabi-fpu = ["aarch32-rt/eabi-fpu"]
