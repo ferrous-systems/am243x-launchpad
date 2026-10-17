@@ -34,8 +34,7 @@ fn chip_info() {
 #[cfg(arm_architecture = "v7-r")]
 fn mpu_pmsa_v7() {
     use aarch32_cpu::{
-        pmsav7::{CacheablePolicy, Config, MemAttr, Mpu, Region, RegionSize},
-        register::Mpuir,
+        pmsav7::{AccessPerms, CachePolicy, Config, MemAttr, Mpu, Region, RegionSize}, register::Mpuir,
     };
 
     // How many regions?
@@ -66,9 +65,10 @@ fn mpu_pmsa_v7() {
             subregion_mask: 0x00,
             enabled: true,
             no_exec: false,
+            access_perms: AccessPerms::ReadWrite,
             mem_attr: MemAttr::Cacheable {
-                inner: CacheablePolicy::WriteThroughNoWriteAllocate,
-                outer: CacheablePolicy::NonCacheable,
+                inner: CachePolicy::WriteThroughNoWriteAlloc,
+                outer: CachePolicy::NonCacheable,
                 shareable: true,
             },
         }],
