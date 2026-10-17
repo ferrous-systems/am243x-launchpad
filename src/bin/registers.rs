@@ -10,13 +10,13 @@ use am243x_launchpad as _;
 fn main() -> ! {
     chip_info();
 
-    for _ in 0..1_000_000 {
+    for _ in 0..5_000_000 {
         aarch32_cpu::asm::nop();
     }
 
     test_changing_sctlr();
 
-    for _ in 0..1_000_000 {
+    for _ in 0..5_000_000 {
         aarch32_cpu::asm::nop();
     }
 
