@@ -8,9 +8,6 @@ use am243x_launchpad as _;
 
 use defmt_rtt as _;
 
-// todo: replace with a call to a timer
-defmt::timestamp!("{:tus}", 0);
-
 #[aarch32_rt::entry]
 fn main() -> ! {
     aarch32_cpu::register::Sctlr::modify(|f| {

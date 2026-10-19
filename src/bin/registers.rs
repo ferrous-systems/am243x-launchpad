@@ -10,13 +10,13 @@ use am243x_launchpad as _;
 fn main() -> ! {
     chip_info();
 
-    for _ in 0..1_000_000 {
+    for _ in 0..5_000_000 {
         aarch32_cpu::asm::nop();
     }
 
     test_changing_sctlr();
 
-    for _ in 0..1_000_000 {
+    for _ in 0..5_000_000 {
         aarch32_cpu::asm::nop();
     }
 
@@ -26,16 +26,15 @@ fn main() -> ! {
 }
 
 fn chip_info() {
-    defmt::info!("{:?}", aarch32_cpu::register::Midr::read());
-    defmt::info!("{:?}", aarch32_cpu::register::Cpsr::read());
-    defmt::info!("{:?}", aarch32_cpu::register::Mpidr::read());
+    defmt::info!("{:x}", aarch32_cpu::register::Midr::read());
+    defmt::info!("{:x}", aarch32_cpu::register::Cpsr::read());
+    defmt::info!("{:x}", aarch32_cpu::register::Mpidr::read());
 }
 
 #[cfg(arm_architecture = "v7-r")]
 fn mpu_pmsa_v7() {
     use aarch32_cpu::{
-        pmsav7::{CacheablePolicy, Config, MemAttr, Mpu, Region, RegionSize},
-        register::Mpuir,
+        pmsav7::{AccessPerms, CachePolicy, Config, MemAttr, Mpu, Region, RegionSize}, register::Mpuir,
     };
 
     // How many regions?
@@ -66,9 +65,10 @@ fn mpu_pmsa_v7() {
             subregion_mask: 0x00,
             enabled: true,
             no_exec: false,
+            access_perms: AccessPerms::ReadWrite,
             mem_attr: MemAttr::Cacheable {
-                inner: CacheablePolicy::WriteThroughNoWriteAllocate,
-                outer: CacheablePolicy::NonCacheable,
+                inner: CachePolicy::WriteThroughNoWriteAlloc,
+                outer: CachePolicy::NonCacheable,
                 shareable: true,
             },
         }],

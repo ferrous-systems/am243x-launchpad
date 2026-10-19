@@ -18,11 +18,12 @@ fn main() -> ! {
 }
 
 /// This is our SVC exception handler
-#[no_mangle]
-unsafe extern "C" fn _svc_handler(arg: u32) {
-    defmt::info!("In _svc_handler, with arg={:#06x}", arg);
+#[aarch32_rt::exception(SupervisorCall)]
+fn svc_handler(arg: u32, _frame: &aarch32_rt::Frame) -> u32 {
+    defmt::println!("In svc_handler, with arg=0x{=u32:06x}", arg);
     if arg == 0xABCDEF {
         // test nested SVC calls
         aarch32_cpu::svc!(0x456789);
     }
+    0
 }
