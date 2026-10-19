@@ -34,16 +34,10 @@ These examples run on the Cortex-R5F at Core 0, Cluster 0.
 
 ## Loading
 
-Currently `probe-rs` has experimental Armv7-R support, in [this PR](https://github.com/probe-rs/probe-rs/pull/3844). You will also need the YAML file in the root directory of this repo, until such time as it gets added to probe-rs.
+Currently `probe-rs` 0.32 has experimental Armv7-R support. You will also need the YAML file in the root directory of this repo, until such time as it gets added to probe-rs.
 
 ```console
-$ git clone https://github.com/probe-rs/probe-rs
-$ cd probe-rs/probe-rs-tools
-$ git checkout armv7r-support
-$ cargo install --path .
-$ cd ~/am243x-launchpad
 $ cargo run
-cargo run
    Compiling am243x-launchpad v0.1.0 (/Users/jonathan/Documents/ferrous-systems/sitara-launchpad/am243x-launchpad)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.32s
      Running `probe-rs run --chip AM2434 --chip-description-path ./AM243.yaml target/armv7r-none-eabihf/debug/hello`
@@ -52,6 +46,10 @@ This is defmt on the AM243x Launchpad...
 [ERROR] PANIC: panicked at "src/bin/hello.rs":12:5 (am243x_launchpad am243x-launchpad/src/lib.rs:16)
 Firmware exited with: Application exit (Aborted)
 ```
+
+Note that we currently [observe issues] with `--release` builds that need to handle exceptions.
+
+[observe issues]: https://github.com/ferrous-systems/am243x-launchpad/issues/2
 
 ## Minimum Supported Rust Version (MSRV)
 
